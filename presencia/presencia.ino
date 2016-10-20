@@ -10,18 +10,22 @@
 
 DS3231  rtc(SDA, SCL);
 SoftwareSerial serialMp3(10, 11);
-const int INTERVALO_RELOJ = 100;
+const byte INTERVALO_RELOJ = 100;
 const int MEDIA_ESCALA = 512;
-const int ALERTA_VERDE = 0;
-const int ALERTA_AMARILLA = 1;
-const int ALERTA_NARANJA = 2;
-const int ALERTA_ROJA = 3;
-const int DEMORA_ENCENDIDO = 4;
-const int TIEMPO_ENCENDIDO = 60;
+const byte ALERTA_VERDE = 0;
+const byte ALERTA_AMARILLA = 1;
+const byte ALERTA_NARANJA = 2;
+const byte ALERTA_ROJA = 3;
+const byte DEMORA_ENCENDIDO = 4;
+const byte TIEMPO_ENCENDIDO = 60;
+const byte MICROFONO = A0;
+const byte SENSIBILIDAD = A1;
+const byte SALIDA0 = 3;
+const byte ZUMBADOR = 8;
 
-int nivelAlerta = 0;
+byte nivelAlerta = 0;
 int lecturaAnterior = 0;
-long milisegundosReloj;
+unsigned long milisegundosReloj;
 long encender0 = 0, apagar0 = 0;
 long tiempoActual;
 
@@ -34,8 +38,8 @@ void setup() {
   mp3_set_volume (15);
   rtc.begin();
 
-  pinMode(8, OUTPUT);//buzz
-  pinMode(3, OUTPUT); //rele
+  pinMode(ZUMBADOR, OUTPUT);//buzz
+  pinMode(SALIDA0, OUTPUT); //rele
 }
 
 void loop() {
@@ -45,28 +49,28 @@ void loop() {
     tiempoActual = rtc.getUnixTime(rtc.getTime());
 
     if (encender0 <= tiempoActual && tiempoActual <= apagar0) {
-      digitalWrite(3, LOW); //VALOR_ALTO_0
+      digitalWrite(SALIDA0, LOW); //VALOR_ALTO_0
     }
     else {
-      digitalWrite(3, HIGH);
+      digitalWrite(SALIDA0, HIGH);
     }
   }
 
   int valor = 0;
-  valor = analogRead(A0);
+  valor = analogRead(MICROFONO);
   //  Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
   // Serial.println(valor);
 
   delay(10);
 
-  int limite = analogRead(A1) / 20;
+  int limite = analogRead(SENSIBILIDAD) / 20;
 
   if (valor > MEDIA_ESCALA + limite  && lecturaAnterior < MEDIA_ESCALA - limite) {
     // Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
 
     encender0 = tiempoActual + DEMORA_ENCENDIDO; // actua a los cuatro segundos
     apagar0 = tiempoActual + TIEMPO_ENCENDIDO + DEMORA_ENCENDIDO; //por un minuto y apaga
-    tone(8, 1000, 100);
+    tone(ZUMBADOR, 1000, 100);
   }
   lecturaAnterior = valor;
 
