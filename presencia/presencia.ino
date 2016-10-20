@@ -12,9 +12,9 @@ DS3231  rtc(SDA, SCL);
 SoftwareSerial serialMp3(10, 11);
 const int INTERVALO_RELOJ = 100;
 long milis;
-long encender0=0, apagar0=0;
+long encender0 = 0, apagar0 = 0;
 long tiempo;
-int anterior=0;
+int anterior = 0;
 void setup() {
   Serial.begin(9600);
   serialMp3.begin(9600);
@@ -60,33 +60,33 @@ void loop() {
     // Serial.println(rtc.getTemp());
     tiempo = rtc.getUnixTime(tiempoT);
 
-    if (encender0 <= tiempo && tiempo <= apagar0){
+    if (encender0 <= tiempo && tiempo <= apagar0) {
       digitalWrite(3, LOW); //VALOR_ALTO_0
-  //  Serial.println("  encendido");
-  }
-    else{
+      //  Serial.println("  encendido");
+    }
+    else {
       digitalWrite(3, HIGH);
-//Serial.println("  apagado");
+      //Serial.println("  apagado");
     }
   }
 
-  int valor=0;
+  int valor = 0;
   valor = analogRead(A0);
-//  Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
+  //  Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
   Serial.println(valor);
 
   delay(10);
 
-  int limite=analogRead(A1);
+  int limite = analogRead(A1);
 
-  if (valor > limite+limite/10&&anterior<limite) {
- // Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
+  if (valor > limite + limite / 10 && anterior < limite) {
+    // Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
 
-    encender0 = tiempo;
+    encender0 = tiempo + 4;
     apagar0 = tiempo + 60;
- //   tone(8,1000,100);
+    //   tone(8,1000,100);
   }
-  anterior=valor;
+  anterior = valor;
   //  if (condicion(valor)){
   //   procesarReglas()
   // }
