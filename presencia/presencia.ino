@@ -11,6 +11,8 @@
 DS3231  rtc(SDA, SCL);
 SoftwareSerial serialMp3(10, 11);
 const int INTERVALO_RELOJ = 100;
+const int MEDIA_ESCALA=512;
+
 long milis;
 long encender0 = 0, apagar0 = 0;
 long tiempo;
@@ -77,9 +79,9 @@ void loop() {
 
   delay(10);
 
-  int limite = analogRead(A1);
+  int limite = analogRead(A1)/20;
 
-  if (valor > limite + limite / 10 && anterior < limite) {
+  if (valor > MEDIA_ESCALA + limite  && anterior < MEDIA_ESCALA - limite) {
     // Serial.println(String(valor) +" "+ String(tiempo) + " "+String(encender0)+" "+String(apagar0));
 
     encender0 = tiempo + 4;
