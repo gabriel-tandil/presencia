@@ -41,6 +41,8 @@ void setup() {
 
   rtc.begin(); //inicializo el reloj de tiempo real TODO: sera realmente util cuando haya eventos que dependan de la hora
 
+  randomSeed(millis());
+
   pinMode(ZUMBADOR, OUTPUT);
   pinMode(SALIDA0, OUTPUT);
 }
@@ -91,15 +93,15 @@ void loop() {
     apagar0 = tiempoActual + TIEMPO_ENCENDIDO + DEMORA_ENCENDIDO; //por un minuto y apaga
 
     if (nivelAlerta == ALERTA_AMARILLA) {
-
+      mp3_play(random(9));// del 0 al 9 audios nivel de alerta amarillo
     }
 
     if (nivelAlerta == ALERTA_NARANJA) {
-
+      mp3_play(10+random(9));// del 10 al 19 audios nivel de alerta naranja
     }
 
     if (nivelAlerta == ALERTA_ROJA) {
-
+      mp3_play(20+random(9));// del 20 al 29 audios nivel de alerta roja
     }
   }
   lecturaAnterior = valor;
