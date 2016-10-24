@@ -16,26 +16,24 @@ const byte ALERTA_VERDE = 0;
 const byte ALERTA_AMARILLA = 1;
 const byte ALERTA_NARANJA = 2;
 const byte ALERTA_ROJA = 3;
-
 //----constantes de tiempo
 const byte DEMORA_ENCENDIDO = 4;//segundos, lo que tarda en actuar luego de detectar el evento
 const byte TIEMPO_ENCENDIDO = 60;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 250; //segundos, tiempo sin disparos para relajar el nivel de alerta
 const byte TIEMPO_SUBIR_ALERTA = 2; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo)
 const byte INTERVALO_RELOJ = 100; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
-
 //----pines de los dispositivos conectados
 const byte MICROFONO = A0;
 const byte SENSIBILIDAD = A1;
 const byte SALIDA0 = 3;
 const byte ZUMBADOR = 8;
 const byte ESTADO_REPRODUCTOR = 4;
-
 //----otras
-const int MEDIA_ESCALA = 512; // supuesto medio de la señal de entrada analógica del microfono
+const int MEDIA_ESCALA = 522; // supuesto medio de la señal de entrada analógica del microfono
+const byte DIVISOR_SENSIBILIDAD_LIMITE = 20;
 
 byte nivelAlerta = 0;
-int lecturaAnterior = 0;
+int lecturaAnterior = 1023; //no quiero que entre en la primera iteración
 unsigned long milisegundosReloj;
 long encender0 = 0, apagar0 = 0, reproducirAudio = 0;
 long tiempoActual;
@@ -56,6 +54,10 @@ void setup() {
   // establezco los modos de los pines
   pinMode(ZUMBADOR, OUTPUT);
   pinMode(SALIDA0, OUTPUT);
+  
+  digitalWrite(SALIDA0, HIGH); // que arranque en apagado la salida
+  tone(ZUMBADOR, 1000, 100); //pitido de encendido
+  delay(150); // no quiero que el micro detecte mi pitido  
 }
 
 void loop() {
@@ -92,11 +94,16 @@ void loop() {
 
   delay(10); //TODO: este delay no se si sirve de algo, si no sirve borrarlo
 
-  int limite = analogRead(SENSIBILIDAD) / 20;
+  int limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
 
   // disparo de evento
   if (valor > MEDIA_ESCALA + limite  && lecturaAnterior < MEDIA_ESCALA - limite) {
 
+    // prendo y apago el led
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(100);
+    digitalWrite(LED_BUILTIN, LOW);
+    
     tiempoUltimoDisparo = tiempoActual;
 
     if (tiempoActual - tiempoUltimoDisparo > TIEMPO_SUBIR_ALERTA) {
@@ -105,7 +112,7 @@ void loop() {
 
       for (byte i = 0; i < nivelAlerta; i++) { //hago pitar el zumbador tantas veces como nivel de alerta
         tone(ZUMBADOR, 100, 100);
-        delay(150);
+        delay(150); // no quiero que el micro detecte mi pitido
       }
     }
 
