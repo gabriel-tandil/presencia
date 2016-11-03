@@ -104,9 +104,10 @@ void loop() {
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
     
-    tiempoUltimoDisparo = tiempoActual;
-
     if (tiempoActual - tiempoUltimoDisparo > TIEMPO_SUBIR_ALERTA) {
+
+      tiempoUltimoDisparo = tiempoActual;
+
       //subo alerta
       nivelAlerta = nivelAlerta >= ALERTA_ROJA ? ALERTA_ROJA : nivelAlerta++;
 
