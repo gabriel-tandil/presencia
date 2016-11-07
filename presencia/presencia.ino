@@ -17,10 +17,10 @@ const byte ALERTA_AMARILLA = 1;
 const byte ALERTA_NARANJA = 2;
 const byte ALERTA_ROJA = 3;
 //----constantes de tiempo
-const byte DEMORA_ENCENDIDO = 3;//segundos, lo que tarda en actuar luego de detectar el evento (solo vale en alerta verde)
+const byte DEMORA_ENCENDIDO = 3;//segundos, lo que tarda en actuar luego de detectar el evento (solo vale en alerta amarilla, los mas altos no tienen espera)
 const byte TIEMPO_ENCENDIDO = 60;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 250; //segundos, tiempo sin disparos para relajar el nivel de alerta
-const byte TIEMPO_SUBIR_ALERTA = 2; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo)
+const byte TIEMPO_SUBIR_ALERTA = 6; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo, mas largo que el audio de alerta mas largo)
 const byte INTERVALO_RELOJ = 100; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
 //----pines de los dispositivos conectados
 const byte MICROFONO = A0;
@@ -78,12 +78,12 @@ void loop() {
     }
     if (reproducirAudio > 0 && reproducirAudio <= tiempoActual) {
       reproducirAudio = 0;
-
-      while (digitalRead(ESTADO_REPRODUCTOR) == LOW); // espero a que el reproductor acabe antes de reproducir el nuevo audio
-
+      while (digitalRead(ESTADO_REPRODUCTOR) == LOW); // espero a que el reproductor acabe
       // del 0 al 9 audios nivel de alerta verde del 10 al 19 audios nivel de alerta amarillo, del 20 al 29 audios nivel de alerta naranja y del 30 al 39 audios nivel de alerta roja
       byte numAudio = random(9) + nivelAlerta * 10;
       mp3_play(numAudio);
+      delay(100);
+      while (digitalRead(ESTADO_REPRODUCTOR) == LOW); // espero a que el reproductor acabe
     }
 
     //si pasa un tiempo sin eventos relajo alerta
@@ -121,8 +121,8 @@ void loop() {
       }
     }
 
-    encender0 = tiempoActual + (nivelAlerta == 0 ? DEMORA_ENCENDIDO : 0); // actua luego de la demora constante
-    apagar0 = tiempoActual + TIEMPO_ENCENDIDO +  (nivelAlerta == 0 ? DEMORA_ENCENDIDO : 0); //durante el tiempo establecido y apaga
+    encender0 = tiempoActual + (nivelAlerta == 1 ? DEMORA_ENCENDIDO : 0); // actua luego de la demora constante
+    apagar0 = tiempoActual + TIEMPO_ENCENDIDO +  (nivelAlerta == 1 ? DEMORA_ENCENDIDO : 0); //durante el tiempo establecido y apaga
 
     reproducirAudio = tiempoActual + DEMORA_ENCENDIDO; // reproducira el audio acorde al nivel de alerta
 
