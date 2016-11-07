@@ -17,7 +17,7 @@ const byte ALERTA_AMARILLA = 1;
 const byte ALERTA_NARANJA = 2;
 const byte ALERTA_ROJA = 3;
 //----constantes de tiempo
-const byte DEMORA_ENCENDIDO = 4;//segundos, lo que tarda en actuar luego de detectar el evento
+const byte DEMORA_ENCENDIDO = 3;//segundos, lo que tarda en actuar luego de detectar el evento (solo vale en alerta verde)
 const byte TIEMPO_ENCENDIDO = 60;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 250; //segundos, tiempo sin disparos para relajar el nivel de alerta
 const byte TIEMPO_SUBIR_ALERTA = 2; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo)
@@ -54,10 +54,10 @@ void setup() {
   // establezco los modos de los pines
   pinMode(ZUMBADOR, OUTPUT);
   pinMode(SALIDA0, OUTPUT);
-  
+
   digitalWrite(SALIDA0, HIGH); // que arranque en apagado la salida
   tone(ZUMBADOR, 1000, 100); //pitido de encendido
-  delay(150); // no quiero que el micro detecte mi pitido  
+  delay(150); // no quiero que el micro detecte mi pitido
 }
 
 void loop() {
@@ -68,11 +68,14 @@ void loop() {
 
     if (encender0 <= tiempoActual && tiempoActual <= apagar0) {
       digitalWrite(SALIDA0, LOW); //VALOR_ALTO_0
+      delay(100); //asi no escucha el rele
+
     }
     else {
       digitalWrite(SALIDA0, HIGH);
-    }
+      delay(100); //asi no escucha el rele
 
+    }
     if (reproducirAudio > 0 && reproducirAudio <= tiempoActual) {
       reproducirAudio = 0;
 
@@ -85,7 +88,7 @@ void loop() {
 
     //si pasa un tiempo sin eventos relajo alerta
     if (tiempoActual - tiempoUltimoDisparo >= TIEMPO_BAJAR_ALERTA)
-      nivelAlerta = nivelAlerta > ALERTA_VERDE ? nivelAlerta-- : ALERTA_VERDE;
+      nivelAlerta = nivelAlerta > ALERTA_VERDE ? nivelAlerta - 1 : ALERTA_VERDE;
 
   }
 
@@ -103,22 +106,23 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
-    
+
     if (tiempoActual - tiempoUltimoDisparo > TIEMPO_SUBIR_ALERTA) {
 
       tiempoUltimoDisparo = tiempoActual;
 
       //subo alerta
-      nivelAlerta = nivelAlerta >= ALERTA_ROJA ? ALERTA_ROJA : nivelAlerta++;
-
+      nivelAlerta = nivelAlerta >= ALERTA_ROJA ? ALERTA_ROJA : nivelAlerta + 1;
+      Serial.println("alerta: ");
+      Serial.print(nivelAlerta);
       for (byte i = 0; i < nivelAlerta; i++) { //hago pitar el zumbador tantas veces como nivel de alerta
         tone(ZUMBADOR, 100, 100);
         delay(150); // no quiero que el micro detecte mi pitido
       }
     }
 
-    encender0 = tiempoActual + DEMORA_ENCENDIDO; // actua luego de la demora constante
-    apagar0 = tiempoActual + TIEMPO_ENCENDIDO + DEMORA_ENCENDIDO; //durante el tiempo establecido y apaga
+    encender0 = tiempoActual + (nivelAlerta == 0 ? DEMORA_ENCENDIDO : 0); // actua luego de la demora constante
+    apagar0 = tiempoActual + TIEMPO_ENCENDIDO +  (nivelAlerta == 0 ? DEMORA_ENCENDIDO : 0); //durante el tiempo establecido y apaga
 
     reproducirAudio = tiempoActual + DEMORA_ENCENDIDO; // reproducira el audio acorde al nivel de alerta
 
