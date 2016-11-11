@@ -1,6 +1,6 @@
 # Presencia
-Simulación de presencia con arduino
+Simulación de presencia humana con arduino.
 
 ---
 
-Presence simulation with arduino
+Arduino human presence simulation.
