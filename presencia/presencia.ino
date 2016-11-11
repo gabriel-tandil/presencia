@@ -34,6 +34,8 @@ const byte DIVISOR_SENSIBILIDAD_LIMITE = 20;
 
 byte nivelAlerta = 0;
 int lecturaAnterior = 1023; //no quiero que entre en la primera iteración
+int minLocal = 1024;// mínimo local de la entrada del micrófono
+int maxLocal = 0; // máximo local de la entrada del micrófono
 unsigned long milisegundosReloj;
 long encender0 = 0, apagar0 = 0, reproducirAudio = 0;
 long tiempoActual;
@@ -69,12 +71,10 @@ void loop() {
     if (encender0 <= tiempoActual && tiempoActual <= apagar0) {
       digitalWrite(SALIDA0, LOW); //VALOR_ALTO_0
       delay(100); //asi no escucha el rele
-
     }
     else {
       digitalWrite(SALIDA0, HIGH);
       delay(100); //asi no escucha el rele
-
     }
     if (reproducirAudio > 0 && reproducirAudio <= tiempoActual) {
       reproducirAudio = 0;
@@ -92,15 +92,20 @@ void loop() {
 
   }
 
-  int valor = 0;
-  valor = analogRead(MICROFONO);
+  int valor = analogRead(MICROFONO);
+
+  if (valor > lecturaAnterior) //esta subiendo
+    maxLocal = valor;
+  if (valor < lecturaAnterior) //esta bajando
+    minLocal = valor;
+  lecturaAnterior = valor;
 
   delay(10); //TODO: este delay no se si sirve de algo, si no sirve borrarlo
 
   int limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
 
   // disparo de evento
-  if (valor > MEDIA_ESCALA + limite  && lecturaAnterior < MEDIA_ESCALA - limite) {
+  if (minLocal < MEDIA_ESCALA - limite && maxLocal > MEDIA_ESCALA + limite) {
 
     // prendo y apago el led
     digitalWrite(LED_BUILTIN, HIGH);
@@ -128,7 +133,7 @@ void loop() {
 
   }
 
-  lecturaAnterior = valor;
+
 
   //este seria el ideal a lograr para modularizacion
   //---------------------------------------------
