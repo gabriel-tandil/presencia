@@ -102,6 +102,15 @@ void loop() {
 
   int limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
 
+  // log
+  Serial.print(valor);
+  Serial.print(" ");
+  Serial.print(limite);
+  Serial.print(" ");
+  Serial.print(minLocal);
+  Serial.print(" ");
+  Serial.println(maxLocal);
+
   // disparo de evento
   if ( maxLocal - minLocal > limite) {
 
@@ -117,7 +126,7 @@ void loop() {
       //subo alerta
       nivelAlerta = nivelAlerta >= ALERTA_ROJA ? ALERTA_ROJA : nivelAlerta + 1;
       Serial.println("alerta: ");
-      Serial.print(nivelAlerta);
+      Serial.println(nivelAlerta);
       for (byte i = 0; i < nivelAlerta; i++) { //hago pitar el zumbador tantas veces como nivel de alerta
         tone(ZUMBADOR, 100, 100);
         delay(150); // no quiero que el micro detecte mi pitido
