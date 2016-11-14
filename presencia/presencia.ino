@@ -29,7 +29,6 @@ const byte SALIDA0 = 3;
 const byte ZUMBADOR = 8;
 const byte ESTADO_REPRODUCTOR = 4;
 //----otras
-const int MEDIA_ESCALA = 522; // supuesto medio de la señal de entrada analógica del microfono
 const byte DIVISOR_SENSIBILIDAD_LIMITE = 20;
 
 byte nivelAlerta = 0;
@@ -89,7 +88,6 @@ void loop() {
     //si pasa un tiempo sin eventos relajo alerta
     if (tiempoActual - tiempoUltimoDisparo >= TIEMPO_BAJAR_ALERTA)
       nivelAlerta = nivelAlerta > ALERTA_VERDE ? nivelAlerta - 1 : ALERTA_VERDE;
-
   }
 
   int valor = analogRead(MICROFONO);
@@ -105,7 +103,7 @@ void loop() {
   int limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
 
   // disparo de evento
-  if (minLocal < MEDIA_ESCALA - limite && maxLocal > MEDIA_ESCALA + limite) {
+  if ( maxLocal - minLocal > limite) {
 
     // prendo y apago el led
     digitalWrite(LED_BUILTIN, HIGH);
@@ -130,15 +128,6 @@ void loop() {
     apagar0 = tiempoActual + TIEMPO_ENCENDIDO +  (nivelAlerta == 1 ? DEMORA_ENCENDIDO : 0); //durante el tiempo establecido y apaga
 
     reproducirAudio = tiempoActual + DEMORA_ENCENDIDO; // reproducira el audio acorde al nivel de alerta
-
   }
-
-
-
-  //este seria el ideal a lograr para modularizacion
-  //---------------------------------------------
-  //  if (condicion(valor)){
-  //   procesarReglas()
-  // }
 
 }
