@@ -33,8 +33,6 @@ const byte DIVISOR_SENSIBILIDAD_LIMITE = 20;
 
 byte nivelAlerta = 0;
 int lecturaAnterior = 1023; //no quiero que entre en la primera iteración
-int minLocal = 1024;// mínimo local de la entrada del micrófono
-int maxLocal = 0; // máximo local de la entrada del micrófono
 unsigned long milisegundosReloj;
 long encender0 = 0, apagar0 = 0, reproducirAudio = 0;
 long tiempoActual;
@@ -92,12 +90,6 @@ void loop() {
 
   int valor = analogRead(MICROFONO);
 
-  if (valor > lecturaAnterior) //esta subiendo
-    maxLocal = valor;
-  if (valor < lecturaAnterior) //esta bajando
-    minLocal = valor;
-  lecturaAnterior = valor;
-
   delay(10); //TODO: este delay no se si sirve de algo, si no sirve borrarlo
 
   int limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
@@ -107,12 +99,11 @@ void loop() {
   Serial.print(" ");
   Serial.print(limite);
   Serial.print(" ");
-  Serial.print(minLocal);
-  Serial.print(" ");
-  Serial.println(maxLocal);
+  Serial.print(lecturaAnterior);
+
 
   // disparo de evento
-  if ( maxLocal - minLocal > limite) {
+  if ( lecturaAnterior-valor > limite || valor-lecturaAnterior > limite  ) {
 
     // prendo y apago el led
     digitalWrite(LED_BUILTIN, HIGH);
@@ -138,5 +129,7 @@ void loop() {
 
     reproducirAudio = tiempoActual + DEMORA_ENCENDIDO; // reproducira el audio acorde al nivel de alerta
   }
+
+  lecturaAnterior = valor;
 
 }
