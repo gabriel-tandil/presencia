@@ -21,7 +21,7 @@ const byte DEMORA_ENCENDIDO = 3;//segundos, lo que tarda en actuar luego de dete
 const byte TIEMPO_ENCENDIDO = 60;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 250; //segundos, tiempo sin disparos para relajar el nivel de alerta
 const byte TIEMPO_SUBIR_ALERTA = 6; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo, mas largo que el audio de alerta mas largo)
-const byte INTERVALO_RELOJ = 100; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
+const byte INTERVALO_RELOJ = 350; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
 //----pines de los dispositivos conectados
 const byte MICROFONO = A0;
 const byte SENSIBILIDAD = A1;
@@ -29,10 +29,12 @@ const byte SALIDA0 = 3;
 const byte ZUMBADOR = 8;
 const byte ESTADO_REPRODUCTOR = 4;
 //----otras
-const byte DIVISOR_SENSIBILIDAD_LIMITE = 20;
+const byte DIVISOR_SENSIBILIDAD_LIMITE = 3;
 
 byte nivelAlerta = 0;
 int lecturaAnterior = 1023; //no quiero que entre en la primera iteración
+int limite = 100;
+
 unsigned long milisegundosReloj;
 long encender0 = 0, apagar0 = 0, reproducirAudio = 0;
 long tiempoActual;
@@ -61,17 +63,21 @@ void setup() {
 
 void loop() {
   if (millis() - milisegundosReloj > INTERVALO_RELOJ) {
+      limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
+ //     Serial.print(" ");
+ // Serial.println(limite);
+  
     // procesar eventos de tiempo
     milisegundosReloj = millis();
     tiempoActual = rtc.getUnixTime(rtc.getTime());
 
     if (encender0 <= tiempoActual && tiempoActual <= apagar0) {
       digitalWrite(SALIDA0, LOW); //VALOR_ALTO_0
-      delay(100); //asi no escucha el rele
+      delay(200); //asi no escucha el rele
     }
     else {
       digitalWrite(SALIDA0, HIGH);
-      delay(100); //asi no escucha el rele
+      delay(200); //asi no escucha el rele
     }
     if (reproducirAudio > 0 && reproducirAudio <= tiempoActual) {
       reproducirAudio = 0;
@@ -90,20 +96,19 @@ void loop() {
 
   int valor = analogRead(MICROFONO);
 
-  delay(10); //TODO: este delay no se si sirve de algo, si no sirve borrarlo
+  //delay(10); //TODO: este delay no se si sirve de algo, si no sirve borrarlo
 
-  int limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
+
 
   // log
-  Serial.print(valor);
-  Serial.print(" ");
-  Serial.print(limite);
-  Serial.print(" ");
-  Serial.print(lecturaAnterior);
+
+  //Serial.println(abs(lecturaAnterior-valor));
+ // Serial.print(" ");
+ // Serial.print(limite);
 
 
   // disparo de evento
-  if ( lecturaAnterior-valor > limite || valor-lecturaAnterior > limite  ) {
+  if ( abs(lecturaAnterior-valor) > limite   ) {
 
     // prendo y apago el led
     digitalWrite(LED_BUILTIN, HIGH);
@@ -116,8 +121,8 @@ void loop() {
 
       //subo alerta
       nivelAlerta = nivelAlerta >= ALERTA_ROJA ? ALERTA_ROJA : nivelAlerta + 1;
-      Serial.println("alerta: ");
-      Serial.println(nivelAlerta);
+   //   Serial.println("alerta: ");
+   //   Serial.println(nivelAlerta);
       for (byte i = 0; i < nivelAlerta; i++) { //hago pitar el zumbador tantas veces como nivel de alerta
         tone(ZUMBADOR, 100, 100);
         delay(150); // no quiero que el micro detecte mi pitido
