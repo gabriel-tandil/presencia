@@ -22,7 +22,7 @@ const byte TIEMPO_ENCENDIDO = 60;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 200; //segundos, tiempo sin disparos para relajar el nivel de alerta
 const byte TIEMPO_SUBIR_ALERTA = 6; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo, mas largo que el audio de alerta mas largo)
 const byte INTERVALO_RELOJ = 350; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
-const byte TIEMPO_NO_ESCUCHARSE = 50; //milisegundos, demora para no escuchar propios sonidos
+const byte TIEMPO_NO_ESCUCHARSE = 80; //milisegundos, demora para no escuchar propios sonidos
 //----pines de los dispositivos conectados
 const byte MICROFONO = A0;
 const byte SENSIBILIDAD = A1;
@@ -74,13 +74,15 @@ void loop() {
 
     if (encender0 <= tiempoActual && tiempoActual <= apagar0) {
       if (digitalRead(SALIDA0) == HIGH) {
+        delay(TIEMPO_NO_ESCUCHARSE);
         digitalWrite(SALIDA0, LOW); //VALOR_ALTO_0
         delay(TIEMPO_NO_ESCUCHARSE); //asi no escucha el rele
         lecturaAnterior = analogRead(MICROFONO);
       }
     }
-    else {
+    else if (tiempoActual > apagar0) {
       if (digitalRead(SALIDA0) == LOW) {
+        delay(TIEMPO_NO_ESCUCHARSE);
         digitalWrite(SALIDA0, HIGH);
         delay(TIEMPO_NO_ESCUCHARSE); //asi no escucha el rele
         lecturaAnterior = analogRead(MICROFONO);
