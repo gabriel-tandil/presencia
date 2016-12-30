@@ -140,7 +140,7 @@ void loop() {
     encender0 = tiempoActual + DEMORA_ENCENDIDO_MINIMA + random(DEMORA_ENCENDIDO_MAXIMA - DEMORA_ENCENDIDO_MINIMA); // actua luego de la demora constante
     apagar0 = encender0 + TIEMPO_ENCENDIDO_MINIMO + random(TIEMPO_ENCENDIDO_MAXIMO - TIEMPO_ENCENDIDO_MINIMO); //durante el tiempo establecido y apaga
 
-    reproducirAudio = tiempoActual +  DEMORA_ENCENDIDO_MINIMA + random(DEMORA_ENCENDIDO_MAXIMA - DEMORA_ENCENDIDO_MINIMA); // reproducira el audio acorde al nivel de alerta
+    reproducirAudio = tiempoActual + DEMORA_ENCENDIDO_MINIMA + random(DEMORA_ENCENDIDO_MAXIMA - DEMORA_ENCENDIDO_MINIMA); // reproducira el audio acorde al nivel de alerta
   }
 
   lecturaAnterior = valor;
