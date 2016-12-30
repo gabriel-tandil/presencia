@@ -17,11 +17,13 @@ const byte ALERTA_AMARILLA = 1;
 const byte ALERTA_NARANJA = 2;
 const byte ALERTA_ROJA = 3;
 //----constantes de tiempo
-const byte DEMORA_ENCENDIDO = 3;//segundos, lo que tarda en actuar luego de detectar el evento (solo vale en alerta amarilla, los mas altos no tienen espera)
-const byte TIEMPO_ENCENDIDO = 60;//segundos, lo que dura activo el actuador
+const byte DEMORA_ENCENDIDO_MINIMA = 2;//segundos, lo que tarda en actuar luego de detectar el evento
+const byte DEMORA_ENCENDIDO_MAXIMA = 6;//segundos, lo que tarda en actuar luego de detectar el evento
+const byte TIEMPO_ENCENDIDO_MAXIMO = 80;//segundos, lo que dura activo el actuador
+const byte TIEMPO_ENCENDIDO_MINIMO = 50;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 200; //segundos, tiempo sin disparos para relajar el nivel de alerta
-const byte TIEMPO_SUBIR_ALERTA = 6; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo, mas largo que el audio de alerta mas largo)
-const byte INTERVALO_RELOJ = 350; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
+const byte TIEMPO_SUBIR_ALERTA = 7; //segundos, tiempo minimo entre eventos para subir la alerta (por si es un solo ruido largo, mas largo que el audio de alerta mas largo)
+const int INTERVALO_RELOJ = 350; //milisegundos, demora para procesamiento de eventos de reloj (para que no ejecute en todas las iteraciones del loop y conseguir mejor sensado de eventos)
 const byte TIEMPO_NO_ESCUCHARSE = 80; //milisegundos, demora para no escuchar propios sonidos
 //----pines de los dispositivos conectados
 const byte MICROFONO = A0;
@@ -35,6 +37,7 @@ const byte DIVISOR_SENSIBILIDAD_LIMITE = 3;
 byte nivelAlerta = 0;
 int lecturaAnterior = 1023; //no quiero que entre en la primera iteración
 int limite = 100;
+byte siguienteAudio = 0;
 
 unsigned long milisegundosReloj;
 long encender0 = 0, apagar0 = 0, reproducirAudio = 0;
@@ -43,7 +46,6 @@ long tiempoUltimoDisparo = 0;
 
 void setup() {
   Serial.begin(9600);
-
   serialMp3.begin(9600);
   mp3_set_serial(serialMp3);  //set softwareSerial for DFPlayer-mini mp3 module
   delay(1);  //wait 1ms for mp3 module to set volume
@@ -52,6 +54,8 @@ void setup() {
   rtc.begin(); //inicializo el reloj de tiempo real TODO: sera realmente util cuando haya eventos que dependan de la hora
 
   randomSeed(millis()); // inicializo la semilla aleatoria con el reloj interno
+
+  siguienteAudio = random(9);
 
   // establezco los modos de los pines
   pinMode(ZUMBADOR, OUTPUT);
@@ -64,13 +68,13 @@ void setup() {
 
 void loop() {
   if (millis() - milisegundosReloj > INTERVALO_RELOJ) {
-    limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
-    //     Serial.print(" ");
-    // Serial.println(limite);
-
     // procesar eventos de tiempo
     milisegundosReloj = millis();
     tiempoActual = rtc.getUnixTime(rtc.getTime());
+
+    limite = analogRead(SENSIBILIDAD) / DIVISOR_SENSIBILIDAD_LIMITE;
+    //     Serial.print(" ");
+    // Serial.println(limite);
 
     if (encender0 <= tiempoActual && tiempoActual <= apagar0) {
       if (digitalRead(SALIDA0) == HIGH) {
@@ -90,10 +94,11 @@ void loop() {
     }
     if (reproducirAudio > 0 && reproducirAudio <= tiempoActual) {
       reproducirAudio = 0;
-      while (digitalRead(ESTADO_REPRODUCTOR) == LOW); // espero a que el reproductor acabe
+      while (digitalRead(ESTADO_REPRODUCTOR) == LOW); // espero a que el reproductor acabe, aunque deberia estar apagado
       // del 0 al 9 audios nivel de alerta verde del 10 al 19 audios nivel de alerta amarillo, del 20 al 29 audios nivel de alerta naranja y del 30 al 39 audios nivel de alerta roja
-      byte numAudio = random(9) + nivelAlerta * 10;
-      mp3_play(numAudio);
+      mp3_play(siguienteAudio + nivelAlerta * 10);
+      siguienteAudio = siguienteAudio == 9 ? 0 : siguienteAudio + 1;
+
       delay(100);
       while (digitalRead(ESTADO_REPRODUCTOR) == LOW); // espero a que el reproductor acabe
     }
@@ -105,19 +110,13 @@ void loop() {
 
   int valor = analogRead(MICROFONO);
 
-  //delay(10); //TODO: este delay no se si sirve de algo, si no sirve borrarlo
-
-
-
   // log
-
   //Serial.println(abs(lecturaAnterior-valor));
   // Serial.print(" ");
   // Serial.print(limite);
 
-
-  // disparo de evento
   if ( abs(lecturaAnterior - valor) > limite   ) {
+    // disparo de evento
 
     // prendo y apago el led
     digitalWrite(LED_BUILTIN, HIGH);
@@ -138,10 +137,10 @@ void loop() {
       }
     }
 
-    encender0 = tiempoActual + (nivelAlerta == 1 ? DEMORA_ENCENDIDO : 0); // actua luego de la demora constante
-    apagar0 = tiempoActual + TIEMPO_ENCENDIDO +  (nivelAlerta == 1 ? DEMORA_ENCENDIDO : 0); //durante el tiempo establecido y apaga
+    encender0 = tiempoActual + DEMORA_ENCENDIDO_MINIMA + random(DEMORA_ENCENDIDO_MAXIMA - DEMORA_ENCENDIDO_MINIMA); // actua luego de la demora constante
+    apagar0 = encender0 + TIEMPO_ENCENDIDO_MINIMO + random(TIEMPO_ENCENDIDO_MAXIMO - TIEMPO_ENCENDIDO_MINIMO); //durante el tiempo establecido y apaga
 
-    reproducirAudio = tiempoActual + DEMORA_ENCENDIDO; // reproducira el audio acorde al nivel de alerta
+    reproducirAudio = tiempoActual +  DEMORA_ENCENDIDO_MINIMA + random(DEMORA_ENCENDIDO_MAXIMA - DEMORA_ENCENDIDO_MINIMA); // reproducira el audio acorde al nivel de alerta
   }
 
   lecturaAnterior = valor;
