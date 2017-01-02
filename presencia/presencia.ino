@@ -10,15 +10,14 @@
 
 DS3231  rtc(SDA, SCL);
 SoftwareSerial serialMp3(10, 11);
-
 //----niveles de alerta
 const byte ALERTA_VERDE = 0;
 const byte ALERTA_AMARILLA = 1;
 const byte ALERTA_NARANJA = 2;
 const byte ALERTA_ROJA = 3;
 //----constantes de tiempo
-const byte DEMORA_ENCENDIDO_MINIMA = 2;//segundos, lo que tarda en actuar luego de detectar el evento
-const byte DEMORA_ENCENDIDO_MAXIMA = 6;//segundos, lo que tarda en actuar luego de detectar el evento
+const byte DEMORA_ENCENDIDO_MINIMA = 3;//segundos, lo que tarda en actuar luego de detectar el evento
+const byte DEMORA_ENCENDIDO_MAXIMA = 7;//segundos, lo que tarda en actuar luego de detectar el evento
 const byte TIEMPO_ENCENDIDO_MAXIMO = 80;//segundos, lo que dura activo el actuador
 const byte TIEMPO_ENCENDIDO_MINIMO = 50;//segundos, lo que dura activo el actuador
 const byte TIEMPO_BAJAR_ALERTA = 200; //segundos, tiempo sin disparos para relajar el nivel de alerta
